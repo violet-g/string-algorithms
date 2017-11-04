@@ -189,7 +189,7 @@ void freeMemory() {
 void createTable(int*** table, int xLen, int yLen) {
 	int row;
 	*table = (int **)malloc((xLen+1)*sizeof(int *)); // first column
-	for (row = 0; row < (xLen+1); row++)
+	for (row = 0; row <= xLen; row++)
   	(*table)[row] = (int *)malloc((yLen+1)*sizeof(int)); // rows
 }
 
@@ -204,29 +204,33 @@ void initTable(int*** table, int xLen, int yLen) {
 
 void printTable(int*** table, int xLen, int yLen) {
 	int i,j;
+
 	// first row
 	printf ("%3s%3s%3s", " ", " ", " ");
-	for (i = 0; i <= xLen; i++)
-		printf("%3d", i);
+	for (j = 0; j <= yLen; j++)
+		printf("%3d", j);
+
 	// second row
 	printf ("\n%3s%3s%3s%3s", " ", " ", " ", " ");
-	for (i = 0; i < xLen; i++)
-		printf("%3c", x[i]);
+	for (j = 0; j < yLen; j++)
+		printf("%3c", y[j]);
+
 	// third row
 	printf ("\n%3s%3s%3s", " ", " ", " ");
-	for (i = 0; i <= xLen; i++)
+	for (j = 0; j <= yLen; j++)
 		printf("___");
+
 	// fourth row
 	printf("\n%3s%3s%3s", "0", " ", "|");
-	for (i = 0; i <= xLen; i++)
-		printf("%3d", (*table)[i][0] );
+	for (j = 0; j <= yLen; j++)
+		printf("%3d", (*table)[0][j]);
 	printf("\n");
+
 	// rest of rows
-	for(j = 0; j < yLen; j++) {
-		printf("%3d%3c%3s", j+1, y[j], "|");
-		for (i = 0; i <= xLen; i++) {
-			printf("%3d", (*table)[i][j+1]);
-		}
+	for (i = 1; i <= xLen; i++) {
+		printf("%3d%3c%3s", i, x[i-1], "|");
+		for (j = 0; j <= yLen; j++)
+			printf("%3d", (*table)[i][j]);
 		printf("\n");
 	}
 }
@@ -234,9 +238,8 @@ void printTable(int*** table, int xLen, int yLen) {
 // free memory used by table
 void destroyTable(int*** table, int xLen, int yLen) {
 	int row;
-	for (row = 0; row < (xLen+1); row++) {
+	for (row = 0; row <= xLen; row++)
 		free((*table)[row]);
-	}
 	free(*table);
 }
 
@@ -251,11 +254,10 @@ int lcs(char *x, char *y) {
 	// calculate rest of values
 	for (i = 1; i <= xLen; i++)
 		for (j = 1; j <= yLen; j++)
-			if (x[i] == y[j])
+			if (x[i-1] == y[j-1])
 				table[i][j] = table[i-1][j-1] + 1;
 			else
 				table[i][j] = MAX(table[i-1][j], table[i][j-1]);
-
 	// return the bottom-right value(length of largest common subsequence)
 	return table[xLen][yLen];
 }
@@ -276,7 +278,7 @@ int ed(char *x, char *y) {
 	// calculate rest of edit distance
 	for (i = 1; i <= xLen; i++)
 		for (j = 1; j <= yLen; j++)
-			if (x[i] == y[j])
+			if (x[i-1] == y[j-1])
 				table[i][j] = table[i-1][j-1];
 			else
 				table[i][j] = MIN(table[i-1][j], MIN(table[i][j-1], table[i-1][j-1])) + 1;
@@ -296,7 +298,7 @@ int hsls(char *x, char *y) {
 	// calculate rest of values, keeping track of bestScore
 	for (i = 1; i <= xLen; i++)
 		for (j = 1; j <= yLen; j++) {
-			if (x[i] == y[j])
+			if (x[i-1] == y[j-1])
 				table[i][j] = table[i-1][j-1] + 1;
 			else
 				table[i][j] = MAX(table[i-1][j] - 1, MAX(table[i][j-1] - 1, MAX(table[i-1][j-1] - 1, 0)));
@@ -326,7 +328,7 @@ int main(int argc, char *argv[]) {
 		if (success) { // do not proceed if file input was problematic
 			// confirm dynamic programming type
 			// these print commamds are just placeholders for now
-			if (iterBool)
+			if (iterBool) {
 				printf("Iterative version\n");
 
 				begin = clock(); // start clock
@@ -346,7 +348,7 @@ int main(int argc, char *argv[]) {
 
 				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 				printf("\nTime taken: %0.2f seconds\n", time_spent);
-
+			}
 			if (recMemoBool && (alg_type==LCS || alg_type==ED))
 				printf("Recursive version with memoisation\n");
 			if (recNoMemoBool && (alg_type==LCS || alg_type==ED))
