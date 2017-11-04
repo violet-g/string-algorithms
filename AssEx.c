@@ -185,88 +185,98 @@ void freeMemory() {
 	free(y);
 }
 
+// create empty table
+void createTable(int*** table, int xLen, int yLen) {
+	int row;
+	*table = (int **)malloc((xLen+1)*sizeof(int *)); // first column
+	for (row = 0; row < (xLen+1); row++)
+  	(*table)[row] = (int *)malloc((yLen+1)*sizeof(int)); // rows
+}
+
+// initialise table with "0" values for first row and column
+void initTable(int*** table, int xLen, int yLen) {
+	int i, j;
+	for (i = 0; i <= xLen; i++)
+		(*table)[i][0] = 0;
+	for (j = 1; j <= yLen; j++)
+		(*table)[0][j] = 0;
+}
+
+// free memory used by table
+void destroyTable(int*** table, int xLen, int yLen) {
+	int row;
+	for (row = 0; row < (xLen+1); row++) {
+		free((*table)[row]);
+	}
+	free(*table);
+}
+
 // find length of longest common subsequence
 int lcs(char *x, char *y) {
-	int m = xLen; // length of x
-	int n = yLen; // length of y
+	int i, j, result;
 
-	// create table
-	int row = 0;
-	int **table = (int **)malloc((m+1)*sizeof(int *)); // first column
-	for (row = 0; row < (m+1); row++)
-    		table[row] = (int *)malloc((n+1)*sizeof(int)); // rows
-
-	// initialise first row and column of the table
-	int i, j = 0;
-	for (i = 0; i <= m; i++)
-		table[i][0] = 0;
-	for (j = 1; j <= n; j++)
-		table[0][j] = 0;
+	// create and initialise table
+	int **table;
+	createTable(&table, xLen, yLen);
+	initTable(&table, xLen, yLen);
 
 	// calculate rest of values
-	for (i = 1; i <= m; i++)
-		for (j = 1; j <= n; j++)
+	for (i = 1; i <= xLen; i++)
+		for (j = 1; j <= yLen; j++)
 			if (x[i] == y[j])
 				table[i][j] = table[i-1][j-1] + 1;
 			else
 				table[i][j] = MAX(table[i-1][j], table[i][j-1]);
 
 	// return the bottom-right value(length of largest common subsequence)
-	return table[m][n];
+	result = table[xLen][yLen];
+	destroyTable(&table, xLen, yLen);
+
+	return result;
 }
 
 // edit distance between two strings
 int ed(char *x, char *y) {
-	int m = xLen; // length of x
-	int n = yLen; // length of y
+	int i, j, result;
 
-	// create table
-	int row = 0;
-	int **table = (int **)malloc((m+1)*sizeof(int *)); // first column
-	for (row = 0; row < (m+1); row++)
-    		table[row] = (int *)malloc((n+1)*sizeof(int)); // rows
+	// create and initialise table
+	int **table;
+	createTable(&table, xLen, yLen);
 
 	// initialise first row and column of the table
-	int i, j = 0;
-	for (i = 0; i <= m; i++)
+	for (i = 0; i <= xLen; i++)
 		table[i][0] = i;
-	for (j = 1; j <= n; j++)
+	for (j = 1; j <= yLen; j++)
 		table[0][j] = j;
 
 	// calculate rest of edit distance
-	for (i = 1; i <= m; i++)
-		for (j = 1; j <= n; j++)
+	for (i = 1; i <= xLen; i++)
+		for (j = 1; j <= yLen; j++)
 			if (x[i] == y[j])
 				table[i][j] = table[i-1][j-1];
 			else
 				table[i][j] = MIN(table[i-1][j], MIN(table[i][j-1], table[i-1][j-1])) + 1;
 
 	// return the bottom-right value(length of largest common subsequence)
-	return table[m][n];
+	result = table[xLen][yLen];
+	destroyTable(&table, xLen, yLen);
+
+	return result;
 }
 
 // find the length of the highest scoring local similarity
 int hsls(char *x, char *y) {
-	int m = xLen; // length of x
-	int n = yLen; // length of y
 	int bestScore = 0;
+	int i, j, result;
 
-	int row = 0;
-	// create table
-	int **table = (int **)malloc((m+1)*sizeof(int *)); // first column
-	for (row = 0; row < (m+1); row++)
-				table[row] = (int *)malloc((n+1)*sizeof(int)); // rows
-
-	// initialise first row and column of the table
-	int i, j = 0;
-	for (i = 0; i <= m; i++)
-		table[i][0] = 0;
-	for (j = 1; j <= n; j++)
-		table[0][j] = 0;
+	// create and initialise table
+	int **table;
+	createTable(&table, xLen, yLen);
+	initTable(&table, xLen, yLen);
 
 	// calculate rest of values, keeping track of bestScore
-	for (i = 1; i <= m; i++)
-		for (j = 1; j <= n; j++) {
+	for (i = 1; i <= xLen; i++)
+		for (j = 1; j <= yLen; j++) {
 			if (x[i] == y[j])
 				table[i][j] = table[i-1][j-1] + 1;
 			else
@@ -274,8 +284,12 @@ int hsls(char *x, char *y) {
 			if (table[i][j] > bestScore)
 				bestScore = table[i][j];
 		}
-		// return the bottom-right value(length of largest common subsequence)
-		return bestScore;
+
+	// return the bottom-right value(length of largest common subsequence)
+	result = bestScore;
+	destroyTable(&table, xLen, yLen);
+
+	return result;
 }
 
 // main method, entry point
