@@ -18,7 +18,7 @@ int xLen, yLen, alphabetSize; // lengths of two strings and size of alphabet
 bool iterBool = false, recNoMemoBool = false, recMemoBool = false; // which type of dynamic programming to run
 bool printBool = false; // whether to print table
 bool readFileBool = false, genStringsBool = false; // whether to read in strings from file or generate strings randomly
-
+int **table;
 // functions follow
 
 // determine whether a given string consists only of numerical digits
@@ -71,17 +71,17 @@ bool getArgs(int argc, char *argv[]) {
 				i++;
 				if (strcmp(argv[i],"LCS")==0) { // Longest Common Subsequence
 					alg_type = LCS;
-					alg_desc = "Longest Common Subsequence";
+					alg_desc = "Longest Common Subsequence\n";
 					result_string = "Length of a longest common subsequence is";
 				}
 				else if (strcmp(argv[i],"ED")==0) { // Edit Distance
 					alg_type = ED;
-					alg_desc = "Edit Distance";
+					alg_desc = "Edit Distance\n";
 					result_string = "Edit distance is";
 				}
 				else if (strcmp(argv[i],"SW")==0) { // Smith-Waterman Algorithm
 					alg_type = SW;
-					alg_desc = "Smith-Waterman algorithm";
+					alg_desc = "Smith-Waterman algorithm\n";
 					result_string = "Length of a highest scoring local similarity is";
 				}
 				else
@@ -202,6 +202,35 @@ void initTable(int*** table, int xLen, int yLen) {
 		(*table)[0][j] = 0;
 }
 
+void printTable(int*** table, int xLen, int yLen) {
+	int i,j;
+	// first row
+	printf ("%3s%3s%3s", " ", " ", " ");
+	for (i = 0; i <= xLen; i++)
+		printf("%3d", i);
+	// second row
+	printf ("\n%3s%3s%3s%3s", " ", " ", " ", " ");
+	for (i = 0; i < xLen; i++)
+		printf("%3c", x[i]);
+	// third row
+	printf ("\n%3s%3s%3s", " ", " ", " ");
+	for (i = 0; i <= xLen; i++)
+		printf("___");
+	// fourth row
+	printf("\n%3s%3s%3s", "0", " ", "|");
+	for (i = 0; i <= xLen; i++)
+		printf("%3d", (*table)[i][0] );
+	printf("\n");
+	// rest of rows
+	for(j = 0; j < yLen; j++) {
+		printf("%3d%3c%3s", j+1, y[j], "|");
+		for (i = 0; i <= xLen; i++) {
+			printf("%3d", (*table)[i][j+1]);
+		}
+		printf("\n");
+	}
+}
+
 // free memory used by table
 void destroyTable(int*** table, int xLen, int yLen) {
 	int row;
@@ -213,10 +242,9 @@ void destroyTable(int*** table, int xLen, int yLen) {
 
 // find length of longest common subsequence
 int lcs(char *x, char *y) {
-	int i, j, result;
+	int i, j = 0;
 
 	// create and initialise table
-	int **table;
 	createTable(&table, xLen, yLen);
 	initTable(&table, xLen, yLen);
 
@@ -229,18 +257,14 @@ int lcs(char *x, char *y) {
 				table[i][j] = MAX(table[i-1][j], table[i][j-1]);
 
 	// return the bottom-right value(length of largest common subsequence)
-	result = table[xLen][yLen];
-	destroyTable(&table, xLen, yLen);
-
-	return result;
+	return table[xLen][yLen];
 }
 
 // edit distance between two strings
 int ed(char *x, char *y) {
-	int i, j, result;
+	int i, j = 0;
 
 	// create and initialise table
-	int **table;
 	createTable(&table, xLen, yLen);
 
 	// initialise first row and column of the table
@@ -258,19 +282,14 @@ int ed(char *x, char *y) {
 				table[i][j] = MIN(table[i-1][j], MIN(table[i][j-1], table[i-1][j-1])) + 1;
 
 	// return the bottom-right value(length of largest common subsequence)
-	result = table[xLen][yLen];
-	destroyTable(&table, xLen, yLen);
-
-	return result;
+	return table[xLen][yLen];
 }
 
 // find the length of the highest scoring local similarity
 int hsls(char *x, char *y) {
-	int bestScore = 0;
-	int i, j, result;
+	int i, j, bestScore = 0;
 
 	// create and initialise table
-	int **table;
 	createTable(&table, xLen, yLen);
 	initTable(&table, xLen, yLen);
 
@@ -286,10 +305,7 @@ int hsls(char *x, char *y) {
 		}
 
 	// return the bottom-right value(length of largest common subsequence)
-	result = bestScore;
-	destroyTable(&table, xLen, yLen);
-
-	return result;
+	return bestScore;
 }
 
 // main method, entry point
@@ -312,6 +328,7 @@ int main(int argc, char *argv[]) {
 			// these print commamds are just placeholders for now
 			if (iterBool)
 				printf("Iterative version\n");
+
 				begin = clock(); // start clock
 				// choose alg
 				if (alg_type==LCS)
@@ -320,10 +337,16 @@ int main(int argc, char *argv[]) {
 					result = ed(x,y);
 				else if (alg_type==SW)
 					result = hsls(x,y);
-				printf("%s %d\n", result_string, result);
 				end = clock(); // end clock
+
+				printf("%s %d\n", result_string, result);
+				printf("Dynamic programming table:\n");
+				printTable(&table, xLen, yLen);
+				destroyTable(&table, xLen, yLen);
+
 				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-				printf("Time taken: %0.2f seconds\n", time_spent);
+				printf("\nTime taken: %0.2f seconds\n", time_spent);
+
 			if (recMemoBool && (alg_type==LCS || alg_type==ED))
 				printf("Recursive version with memoisation\n");
 			if (recNoMemoBool && (alg_type==LCS || alg_type==ED))
