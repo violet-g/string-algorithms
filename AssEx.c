@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 // global variables
 enum {LCS, ED, SW, NONE} alg_type; // which algorithm to run
@@ -214,6 +215,36 @@ int lcs(char *x, char *y) {
 	return table[m][n];
 }
 
+// edit distance between two strings
+int ed(char *x, char *y) {
+	int m = xLen; // length of x
+	int n = yLen; // length of y
+
+	// create table
+	int row = 0;
+	int **table = (int **)malloc((m+1)*sizeof(int *)); // first column
+	for (row = 0; row < (m+1); row++)
+    		table[row] = (int *)malloc((n+1)*sizeof(int)); // rows
+
+	// initialise first row and column of the table
+	int i, j = 0;
+	for (i = 0; i <= m; i++)
+		table[i][0] = i;
+	for (j = 1; j <= n; j++)
+		table[0][j] = j;
+
+	// calculate rest of edit distance
+	for (i = 1; i <= m; i++)
+		for (j = 1; j <= n; j++)
+			if (x[i] == y[j])
+				table[i][j] = table[i-1][j-1];
+			else
+				table[i][j] = MIN(table[i-1][j], MIN(table[i][j-1], table[i-1][j-1])) + 1;
+
+	// return the bottom-right value(length of largest common subsequence)
+	return table[m][n];
+}
+
 // find the length of the highest scoring local similarity
 int hsls(char *x, char *y) {
 	int m = xLen; // length of x
@@ -271,6 +302,8 @@ int main(int argc, char *argv[]) {
 				// choose alg
 				if (alg_type==LCS)
 					result = lcs(x,y);
+				else if (alg_type==ED)
+					result = ed(x,y);
 				else if (alg_type==SW)
 					result = hsls(x,y);
 				printf("%s %d\n", result_string, result);
