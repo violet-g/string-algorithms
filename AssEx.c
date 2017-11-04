@@ -19,6 +19,7 @@ bool iterBool = false, recNoMemoBool = false, recMemoBool = false; // which type
 bool printBool = false; // whether to print table
 bool readFileBool = false, genStringsBool = false; // whether to read in strings from file or generate strings randomly
 int **table;
+int total;
 // functions follow
 
 // determine whether a given string consists only of numerical digits
@@ -310,6 +311,64 @@ int hsls(char *x, char *y) {
 	return bestScore;
 }
 
+// simple recursive version of the LCS alg
+int rlcshelper(int i, int j) {
+	if ( i==0 || j==0) {
+		total++;
+		table[i][j]++;
+		return 0;
+	}
+	else if (x[i] == y[j]) {
+		total++;
+		table[i][j]++;
+		return 1 + rlcshelper(i-1, j-1);
+	}
+	else {
+		total++;
+		table[i][j]++;
+		return MAX(rlcshelper(i-1,j), rlcshelper(i, j-1));
+	}
+}
+
+int rlcs(int m, int n) {
+	total = 0;
+	createTable(&table, m, n);
+
+	// initialise whole table
+	int i, j = 0;
+	for (i = 0; i <= xLen; i ++)
+		for (j = 0; j <= yLen; j++)
+			table[i][j] = 0;
+
+	rlcshelper(m, n);
+	return total;
+}
+
+int redhelper(int i, int j) {
+	total++;
+	table[i][j]++;
+	if (i==0 || j==0)
+		return 0;
+	else if (x[i] == y[j])
+		return redhelper(i-1, j-1);
+	else
+		return MIN(redhelper(i-1,j), MIN(redhelper(i, j-1), redhelper(i-1, j-1))) + 1;
+}
+
+int red(int m, int n) {
+	total = 0;
+	createTable(&table, m, n);
+
+	// initialise whole table
+	int i, j = 0;
+	for (i = 0; i <= xLen; i ++)
+		for (j = 0; j <= yLen; j++)
+			table[i][j] = 0;
+
+	redhelper(m, n);
+	return total;
+}
+
 // main method, entry point
 int main(int argc, char *argv[]) {
 	clock_t begin, end;
@@ -351,8 +410,24 @@ int main(int argc, char *argv[]) {
 			}
 			if (recMemoBool && (alg_type==LCS || alg_type==ED))
 				printf("Recursive version with memoisation\n");
-			if (recNoMemoBool && (alg_type==LCS || alg_type==ED))
+			if (recNoMemoBool && (alg_type==LCS || alg_type==ED)) {
 				printf("Recursive version without memoisation\n");
+				begin = clock(); // start clock
+				// choose alg
+				if (alg_type==LCS)
+					result = rlcs(xLen, yLen);
+				else if (alg_type==ED)
+					result = red(xLen, yLen);
+				end = clock(); // end clock
+
+				printf("Dynamic programming table:\n");
+				printTable(&table, xLen, yLen);
+				destroyTable(&table, xLen, yLen);
+
+				printf("\nTotal number of times a table entry computed: %d\n", result);
+				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+				printf("Time taken: %0.2f seconds\n", time_spent);
+			}
 			freeMemory(); // free memory occupied by strings
 		}
 	}
