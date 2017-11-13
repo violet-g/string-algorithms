@@ -18,8 +18,20 @@ int xLen, yLen, alphabetSize; // lengths of two strings and size of alphabet
 bool iterBool = false, recNoMemoBool = false, recMemoBool = false; // which type of dynamic programming to run
 bool printBool = false; // whether to print table
 bool readFileBool = false, genStringsBool = false; // whether to read in strings from file or generate strings randomly
+
+// additions
 int **table;
 int total;
+struct Pair;
+struct Pair **pairsTable;
+struct Pair *helperArray;
+int count;
+
+typedef struct Pair {
+	int i;
+	int j;
+} Pair;
+
 // functions follow
 
 // determine whether a given string consists only of numerical digits
@@ -186,24 +198,62 @@ void freeMemory() {
 	free(y);
 }
 
+/********************** HELPER FUNCTIONS *********************************/
+
 // create empty table
-void createTable(int*** table, int xLen, int yLen) {
+void createTable(int xLen, int yLen) {
 	int row;
-	*table = (int **)malloc((xLen+1)*sizeof(int *)); // first column
+	table = (int **)malloc((xLen+1)*sizeof(int *)); // first column
 	for (row = 0; row <= xLen; row++)
-  	(*table)[row] = (int *)malloc((yLen+1)*sizeof(int)); // rows
+  	table[row] = (int *)malloc((yLen+1)*sizeof(int)); // rows
 }
 
 // initialise table with "0" values for first row and column
-void initTable(int*** table, int xLen, int yLen) {
+void initTable(int xLen, int yLen) {
 	int i, j;
 	for (i = 0; i <= xLen; i++)
-		(*table)[i][0] = 0;
+		table[i][0] = 0;
 	for (j = 1; j <= yLen; j++)
-		(*table)[0][j] = 0;
+		table[0][j] = 0;
 }
 
-void printTable(int*** table, int xLen, int yLen) {
+// create table of pairs for memoisation algorithms
+void createPairsTable(int xLen, int yLen) {
+	int row;
+	pairsTable = (Pair **)malloc((xLen+1)*sizeof(Pair *)); // first column
+	for (row = 0; row <= xLen; row++)
+  	pairsTable[row] = (Pair *)malloc((yLen+1)*sizeof(Pair)); // rows
+}
+
+// helper array to check if table value was evaluated
+void createHelperArray(int xLen, int yLen) {
+	helperArray = malloc((xLen+1)*(yLen+1)*sizeof(Pair));
+}
+
+// check if an entry of the table has been evaluated or not
+bool evaluated(int i, int j) {
+ 	int q = pairsTable[i][j].j;
+ 	if (q < 1 || q > count)
+		return false;
+	else
+		return ((helperArray[q].i == i) && (helperArray[q].j = j));
+}
+
+// free memory used by table
+void destroyTable(int xLen, int yLen) {
+	int row;
+	for (row = 0; row <= xLen; row++)
+		free(table[row]);
+	free(table);
+}
+
+// free memory allocated for the helper array
+void destroyHelperArray() {
+	free(helperArray);
+}
+
+// pretty print dynamic programming table
+void printTable(int xLen, int yLen) {
 	int i,j;
 
 	// first row
@@ -224,33 +274,27 @@ void printTable(int*** table, int xLen, int yLen) {
 	// fourth row
 	printf("\n%3s%3s%3s", "0", " ", "|");
 	for (j = 0; j <= yLen; j++)
-		printf("%3d", (*table)[0][j]);
+		printf("%3d", table[0][j]);
 	printf("\n");
 
 	// rest of rows
 	for (i = 1; i <= xLen; i++) {
 		printf("%3d%3c%3s", i, x[i-1], "|");
 		for (j = 0; j <= yLen; j++)
-			printf("%3d", (*table)[i][j]);
+			printf("%3d", table[i][j]);
 		printf("\n");
 	}
 }
 
-// free memory used by table
-void destroyTable(int*** table, int xLen, int yLen) {
-	int row;
-	for (row = 0; row <= xLen; row++)
-		free((*table)[row]);
-	free(*table);
-}
+/*************** LONGEST COMMON SUBSEQUENCE ALGORITHM *********************/
 
-// find length of longest common subsequence
+// iterative LCS
 int lcs(char *x, char *y) {
 	int i, j = 0;
 
 	// create and initialise table
-	createTable(&table, xLen, yLen);
-	initTable(&table, xLen, yLen);
+	createTable(xLen, yLen);
+	initTable(xLen, yLen);
 
 	// calculate rest of values
 	for (i = 1; i <= xLen; i++)
@@ -259,16 +303,66 @@ int lcs(char *x, char *y) {
 				table[i][j] = table[i-1][j-1] + 1;
 			else
 				table[i][j] = MAX(table[i-1][j], table[i][j-1]);
+
 	// return the bottom-right value(length of largest common subsequence)
 	return table[xLen][yLen];
 }
 
-// edit distance between two strings
+// recursive version of LCS - helper
+int rlcshelper(int i, int j) {
+	total++;
+	table[i][j]++;
+	if ( i==0 || j==0)
+		return 0;
+	else if (x[i] == y[j])
+		return 1 + rlcshelper(i-1, j-1);
+	else
+		return MAX(rlcshelper(i-1,j), rlcshelper(i, j-1));
+}
+
+// recursive algorithm
+int rlcs(int m, int n) {
+	total = 0;
+	createTable(m, n);
+	rlcshelper(m, n);
+	return total;
+}
+
+// recursive LCS with memoisation - helper
+int mlcshelper(int i, int j) {
+	if (!evaluated(i, j)) {
+		// printf("Evaluated entry %d %d\n", i, j);
+		count++;
+		pairsTable[i][j].j = count;
+		helperArray[count].i = i;
+		helperArray[count].j = j;
+		if (i == 0 || j == 0)
+			pairsTable[i][j].i = 0;
+		else if (x[i] == y[j])
+			pairsTable[i][j].i = 1 + mlcshelper(i-1, j-1);
+		else
+			pairsTable[i][j].i = MAX(mlcshelper(i-1, j), mlcshelper(i, j-1));
+	}
+	return pairsTable[i][j].i;
+}
+
+// recursive LCS with memoisation
+int mlcs(int m, int n) {
+	count = 0;
+	createPairsTable(m, n);
+	createHelperArray(m, n);
+	mlcshelper(m,n);
+	return pairsTable[m][n].i;
+}
+
+/********************* EDIT DISTANCE ALGORITHM *****************************/
+
+// iterative ED
 int ed(char *x, char *y) {
 	int i, j = 0;
 
 	// create and initialise table
-	createTable(&table, xLen, yLen);
+	createTable(xLen, yLen);
 
 	// initialise first row and column of the table
 	for (i = 0; i <= xLen; i++)
@@ -288,13 +382,65 @@ int ed(char *x, char *y) {
 	return table[xLen][yLen];
 }
 
-// find the length of the highest scoring local similarity
+// recursive ED - helper
+int redhelper(int i, int j) {
+	total++;
+	table[i][j]++;
+	if (i==0 || j==0)
+		return 0;
+	else if (x[i] == y[j])
+		return redhelper(i-1, j-1);
+	else
+		return MIN(redhelper(i-1,j), MIN(redhelper(i, j-1), redhelper(i-1, j-1))) + 1;
+}
+
+// recursive version of the ED alg
+// -- prints how many times a table entry was computed
+int red(int m, int n) {
+	total = 0;
+	createTable(m, n);
+	redhelper(m, n);
+	return total;
+}
+
+// recursive ED with memoisation -- helper
+int medhelper(int i, int j) {
+	if (!evaluated(i, j)) {
+		count++;
+		pairsTable[i][j].j = count;
+		helperArray[count].i = i;
+		helperArray[count].j = j;
+		if (i == 0)
+		 	pairsTable[i][j].i =j;
+		else if (j == 0)
+			pairsTable[i][j].i = i;
+		else if (x[i] == y[j])
+			pairsTable[i][j].i = medhelper(i-1, j-1);
+		else
+			pairsTable[i][j].i = 1 + MIN(medhelper(i-1, j-1), MIN(medhelper(i-1, j), medhelper(i, j-1)));
+	}
+	return pairsTable[i][j].i;
+}
+
+// recursive ED with memoisation
+int med(int m, int n) {
+	count = 0;
+	createPairsTable(m, n);
+	createHelperArray(m, n);
+	medhelper(m,n);
+	return pairsTable[m][n].i;
+}
+
+/********************** SMITH-WATERMAN ALORITHM ****************************/
+/** i.e. length of the highest scoring local similarity **/
+
+// iterative version
 int hsls(char *x, char *y) {
 	int i, j, bestScore = 0;
 
 	// create and initialise table
-	createTable(&table, xLen, yLen);
-	initTable(&table, xLen, yLen);
+	createTable(xLen, yLen);
+	initTable(xLen, yLen);
 
 	// calculate rest of values, keeping track of bestScore
 	for (i = 1; i <= xLen; i++)
@@ -309,64 +455,6 @@ int hsls(char *x, char *y) {
 
 	// return the bottom-right value(length of largest common subsequence)
 	return bestScore;
-}
-
-// simple recursive version of the LCS alg
-int rlcshelper(int i, int j) {
-	if ( i==0 || j==0) {
-		total++;
-		table[i][j]++;
-		return 0;
-	}
-	else if (x[i] == y[j]) {
-		total++;
-		table[i][j]++;
-		return 1 + rlcshelper(i-1, j-1);
-	}
-	else {
-		total++;
-		table[i][j]++;
-		return MAX(rlcshelper(i-1,j), rlcshelper(i, j-1));
-	}
-}
-
-int rlcs(int m, int n) {
-	total = 0;
-	createTable(&table, m, n);
-
-	// initialise whole table
-	int i, j = 0;
-	for (i = 0; i <= xLen; i ++)
-		for (j = 0; j <= yLen; j++)
-			table[i][j] = 0;
-
-	rlcshelper(m, n);
-	return total;
-}
-
-int redhelper(int i, int j) {
-	total++;
-	table[i][j]++;
-	if (i==0 || j==0)
-		return 0;
-	else if (x[i] == y[j])
-		return redhelper(i-1, j-1);
-	else
-		return MIN(redhelper(i-1,j), MIN(redhelper(i, j-1), redhelper(i-1, j-1))) + 1;
-}
-
-int red(int m, int n) {
-	total = 0;
-	createTable(&table, m, n);
-
-	// initialise whole table
-	int i, j = 0;
-	for (i = 0; i <= xLen; i ++)
-		for (j = 0; j <= yLen; j++)
-			table[i][j] = 0;
-
-	redhelper(m, n);
-	return total;
 }
 
 // main method, entry point
@@ -390,7 +478,9 @@ int main(int argc, char *argv[]) {
 			if (iterBool) {
 				printf("Iterative version\n");
 
-				begin = clock(); // start clock
+				// start clock
+				begin = clock();
+
 				// choose alg
 				if (alg_type==LCS)
 					result = lcs(x,y);
@@ -398,33 +488,85 @@ int main(int argc, char *argv[]) {
 					result = ed(x,y);
 				else if (alg_type==SW)
 					result = hsls(x,y);
-				end = clock(); // end clock
 
+				// end clock
+				end = clock();
+
+				// print result
 				printf("%s %d\n", result_string, result);
-				printf("Dynamic programming table:\n");
-				printTable(&table, xLen, yLen);
-				destroyTable(&table, xLen, yLen);
 
+				// print dynamic programming table
+				printf("Dynamic programming table:\n");
+				printTable(xLen, yLen);
+
+				// destroy table
+				destroyTable(xLen, yLen);
+
+				// print time
 				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 				printf("\nTime taken: %0.2f seconds\n", time_spent);
 			}
-			if (recMemoBool && (alg_type==LCS || alg_type==ED))
+			if (recMemoBool && (alg_type==LCS || alg_type==ED)) {
 				printf("Recursive version with memoisation\n");
+
+				// start clock
+				begin = clock();
+
+				// choose alg
+				if (alg_type==LCS)
+					result = mlcs(xLen, yLen);
+				else if (alg_type==ED)
+					result = med(xLen, yLen);
+
+				// end clock
+				end = clock();
+
+				// print result
+				printf("%s %d\n", result_string, result);
+
+				if (printBool) {
+					// print dynamic programming table
+					printf("Dynamic programming table:\n");
+					printTable(xLen, yLen);
+				}
+
+				// destroy table
+				// destroyTable(xLen, yLen);
+				// destroy helper array
+				//destroyHelperArray();
+
+				// print time
+				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+				printf("Time taken: %0.2f seconds\n", time_spent);
+			}
 			if (recNoMemoBool && (alg_type==LCS || alg_type==ED)) {
 				printf("Recursive version without memoisation\n");
-				begin = clock(); // start clock
+
+				// start clock
+				begin = clock();
+
 				// choose alg
 				if (alg_type==LCS)
 					result = rlcs(xLen, yLen);
 				else if (alg_type==ED)
 					result = red(xLen, yLen);
-				end = clock(); // end clock
 
-				printf("Dynamic programming table:\n");
-				printTable(&table, xLen, yLen);
-				destroyTable(&table, xLen, yLen);
+				// end clock
+				end = clock();
 
+				if (printBool) {
+					// print dynamic programming table
+					printf("Dynamic programming table:\n");
+					printTable(xLen, yLen);
+				}
+
+				// destroy table
+				destroyTable(xLen, yLen);
+
+				// print result
 				printf("\nTotal number of times a table entry computed: %d\n", result);
+
+				// print time
 				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 				printf("Time taken: %0.2f seconds\n", time_spent);
 			}
