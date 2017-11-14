@@ -22,12 +22,12 @@ bool readFileBool = false, genStringsBool = false; // whether to read in strings
 // additions
 int **table;
 int total;
-struct Pair;
-struct Pair **pairsTable;
-struct Pair *helperArray;
+struct pair;
+struct pair **pairsTable;
+struct pair *helperArray;
 int count;
 
-typedef struct Pair {
+typedef struct pair {
 	int i;
 	int j;
 } Pair;
@@ -240,6 +240,15 @@ bool evaluated(int i, int j) {
 }
 
 // free memory used by table
+
+void destroyPairsTable(int xLen, int yLen) {
+	int row;
+	for (row = 0; row <= xLen; row++) {
+		free(pairsTable[row]);
+	}
+	free(pairsTable);
+}
+
 void destroyTable(int xLen, int yLen) {
 	int row;
 	for (row = 0; row <= xLen; row++)
@@ -282,6 +291,40 @@ void printTable(int xLen, int yLen) {
 		printf("%3d%3c%3s", i, x[i-1], "|");
 		for (j = 0; j <= yLen; j++)
 			printf("%3d", table[i][j]);
+		printf("\n");
+	}
+}
+
+// pretty print dynamic programming table of pairs
+void printPairsTable(int xLen, int yLen) {
+	int i,j;
+
+	// first row
+	printf ("%3s%3s%3s", " ", " ", " ");
+	for (j = 0; j <= yLen; j++)
+		printf("%3d", j);
+
+	// second row
+	printf ("\n%3s%3s%3s%3s", " ", " ", " ", " ");
+	for (j = 0; j < yLen; j++)
+		printf("%3c", y[j]);
+
+	// third row
+	printf ("\n%3s%3s%3s", " ", " ", " ");
+	for (j = 0; j <= yLen; j++)
+		printf("___");
+
+	// fourth row
+	printf("\n%3s%3s%3s", "0", " ", "|");
+	for (j = 0; j <= yLen; j++)
+		printf("%3d", pairsTable[0][j].i);
+	printf("\n");
+
+	// rest of rows
+	for (i = 1; i <= xLen; i++) {
+		printf("%3d%3c%3s", i, x[i-1], "|");
+		for (j = 0; j <= yLen; j++)
+			printf("%3d", pairsTable[i][j].i);
 		printf("\n");
 	}
 }
@@ -527,13 +570,13 @@ int main(int argc, char *argv[]) {
 				if (printBool) {
 					// print dynamic programming table
 					printf("Dynamic programming table:\n");
-					printTable(xLen, yLen);
+					printPairsTable(xLen, yLen);
 				}
 
 				// destroy table
-				// destroyTable(xLen, yLen);
+				destroyPairsTable(xLen, yLen);
 				// destroy helper array
-				//destroyHelperArray();
+				destroyHelperArray();
 
 				// print time
 				time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
