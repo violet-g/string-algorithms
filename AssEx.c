@@ -338,10 +338,102 @@ void printPairsTable(int xLen, int yLen) {
 }
 
 // function to print the optimal alignment for LCS
-// void lcsAlign(xLen, yLen) {
-//
-//
-// }
+void ilcsAlign(int xLen, int yLen) {
+	int index = table[xLen][yLen];
+	char lcs[index+1];
+	lcs[index] = '\0';
+
+	int l = MAX(xLen, yLen) + (MAX(xLen, yLen) - index);
+	char newX[l + 1];
+	char newY[l + 1];
+	char align[l+1];
+	newX[l] = '\0';
+	newY[l] = '\0';
+	align[l] = '\0';
+
+	int c;
+	for (c = 0; c < l; c ++) {
+		newX[c] = '-';
+		newY[c] = '-';
+		align[c] = ' ';
+	}
+
+	int i = xLen;
+	int j = yLen;
+	while (i > 0 && j > 0 && l > 0) {
+		if (x[i-1] == y[j-1]) {
+			lcs[index-1] = x[i-1];
+			newX[l-1] = x[i-1];
+			newY[l-1] = y[j-1];
+			align[l-1] = '|';
+			i--;
+			j--;
+			index--;
+		} else if (table[i-1][j] > table[i][j-1]) {
+			newX[l-1] = x[i-1];
+			i--;
+		}	else {
+			newY[l-1] = y[j-1];
+			j--;
+		}
+		l--;
+	}
+
+	printf("Optimal Alignment:\n");
+	printf("%s\n", lcs);
+	printf("%s\n", newX);
+	printf("%s\n", align);
+	printf("%s\n", newY);
+}
+
+// function to print the optimal alignment for LCS
+void mlcsAlign(int xLen, int yLen) {
+	int index = pairsTable[xLen][yLen].i;
+	char lcs[index+1];
+	lcs[index] = '\0';
+
+	int l = MAX(xLen, yLen) + (MAX(xLen, yLen) - index);
+	char newX[l + 1];
+	char newY[l + 1];
+	char align[l+1];
+	newX[l] = '\0';
+	newY[l] = '\0';
+	align[l] = '\0';
+
+	int c;
+	for (c = 0; c < l; c ++) {
+		newX[c] = '-';
+		newY[c] = '-';
+		align[c] = ' ';
+	}
+
+	int i = xLen;
+	int j = yLen;
+	while (i > 0 && j > 0 && l > 0) {
+		if (x[i-1] == y[j-1]) {
+			lcs[index-1] = x[i-1];
+			newX[l-1] = x[i-1];
+			newY[l-1] = y[j-1];
+			align[l-1] = '|';
+			i--;
+			j--;
+			index--;
+		} else if (pairsTable[i-1][j].i > pairsTable[i][j-1].i) {
+			newX[l-1] = x[i-1];
+			i--;
+		}	else {
+			newY[l-1] = y[j-1];
+			j--;
+		}
+		l--;
+	}
+
+	printf("Optimal Alignment:\n");
+	printf("%s\n", lcs);
+	printf("%s\n", newX);
+	printf("%s\n", align);
+	printf("%s\n", newY);
+}
 
 /*************** LONGEST COMMON SUBSEQUENCE ALGORITHM *********************/
 
@@ -556,6 +648,9 @@ int main(int argc, char *argv[]) {
 				printf("Dynamic programming table:\n");
 				printTable(xLen, yLen);
 
+				if (alg_type==LCS)
+					ilcsAlign(xLen, yLen);
+
 				// destroy table
 				destroyTable(xLen, yLen);
 
@@ -586,6 +681,10 @@ int main(int argc, char *argv[]) {
 
 				// print result
 				printf("%s %d\n", result_string, result);
+
+				if (alg_type==LCS)
+					mlcsAlign(xLen, yLen);
+
 
 				// print num of entries computed
 				printf("Number of table entries computed: %d\n", count);
