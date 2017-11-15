@@ -236,7 +236,7 @@ bool evaluated(int i, int j) {
  	if (q < 1 || q > count)
 		return false;
 	else
-		return ((helperArray[q].i == i) && (helperArray[q].j = j));
+		return ((helperArray[q].i == i) && (helperArray[q].j == j));
 }
 
 // free memory used by table
@@ -316,15 +316,23 @@ void printPairsTable(int xLen, int yLen) {
 
 	// fourth row
 	printf("\n%3s%3s%3s", "0", " ", "|");
-	for (j = 0; j <= yLen; j++)
-		printf("%3d", pairsTable[0][j].i);
+	for (j = 0; j <= yLen; j++) {
+		if (evaluated(0, j))
+			printf("%3d", pairsTable[0][j].i);
+		else
+			printf("%3s", "-");
+	}
 	printf("\n");
 
 	// rest of rows
 	for (i = 1; i <= xLen; i++) {
 		printf("%3d%3c%3s", i, x[i-1], "|");
-		for (j = 0; j <= yLen; j++)
-			printf("%3d", pairsTable[i][j].i);
+		for (j = 0; j <= yLen; j++) {
+			if (evaluated(i, j))
+				printf("%3d", pairsTable[i][j].i);
+			else
+				printf("%3s", "-");
+		}
 		printf("\n");
 	}
 }
@@ -374,14 +382,13 @@ int rlcs(int m, int n) {
 // recursive LCS with memoisation - helper
 int mlcshelper(int i, int j) {
 	if (!evaluated(i, j)) {
-		// printf("Evaluated entry %d %d\n", i, j);
 		count++;
 		pairsTable[i][j].j = count;
 		helperArray[count].i = i;
 		helperArray[count].j = j;
 		if (i == 0 || j == 0)
 			pairsTable[i][j].i = 0;
-		else if (x[i] == y[j])
+		else if (x[i-1] == y[j-1])
 			pairsTable[i][j].i = 1 + mlcshelper(i-1, j-1);
 		else
 			pairsTable[i][j].i = MAX(mlcshelper(i-1, j), mlcshelper(i, j-1));
@@ -457,7 +464,7 @@ int medhelper(int i, int j) {
 		 	pairsTable[i][j].i =j;
 		else if (j == 0)
 			pairsTable[i][j].i = i;
-		else if (x[i] == y[j])
+		else if (x[i-1] == y[j-1])
 			pairsTable[i][j].i = medhelper(i-1, j-1);
 		else
 			pairsTable[i][j].i = 1 + MIN(medhelper(i-1, j-1), MIN(medhelper(i-1, j), medhelper(i, j-1)));
@@ -505,6 +512,7 @@ int main(int argc, char *argv[]) {
 	clock_t begin, end;
 	double time_spent = 0.0;
 	int result = 0;
+	float calc = 0.00;
 	bool isIllegal = getArgs(argc, argv); // parse arguments from command line
 	if (isIllegal) // print error and quit if illegal arguments
 		printf("Illegal arguments\n");
@@ -564,14 +572,22 @@ int main(int argc, char *argv[]) {
 				// end clock
 				end = clock();
 
-				// print result
-				printf("%s %d\n", result_string, result);
-
 				if (printBool) {
 					// print dynamic programming table
 					printf("Dynamic programming table:\n");
 					printPairsTable(xLen, yLen);
 				}
+
+				// print result
+				printf("%s %d\n", result_string, result);
+
+				// print num of entries computed
+				printf("Number of table entries computed: %d\n", count);
+
+				// print proportion details
+				int tsize = xLen*yLen;
+				calc = ((float)count/(float)tsize)*100.00;
+				printf("Proportion of table computed: %.2f\n", (float)count/(float)tsize);
 
 				// destroy table
 				destroyPairsTable(xLen, yLen);
