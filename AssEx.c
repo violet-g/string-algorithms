@@ -261,36 +261,43 @@ void destroyHelperArray() {
 	free(helperArray);
 }
 
+int numDigits(int n) {
+    if (n < 10) return 1;
+    return 1 + numDigits(n/10);
+}
+
 // pretty print dynamic programming table
 void printTable(int xLen, int yLen) {
 	int i,j;
+	int w = numDigits(table[0][0]) + 1;
 
 	// first row
-	printf ("%3s%3s%3s", " ", " ", " ");
+	printf ("%2s%2s%2s", " ", " ", " ");
 	for (j = 0; j <= yLen; j++)
-		printf("%3d", j);
+		printf("%*d", w, j);
 
 	// second row
-	printf ("\n%3s%3s%3s%3s", " ", " ", " ", " ");
+	printf ("\n%2s%2s%2s%*s", " ", " ", " ", w, " ");
 	for (j = 0; j < yLen; j++)
-		printf("%3c", y[j]);
+		printf("%*c", w, y[j]);
 
 	// third row
-	printf ("\n%3s%3s%3s", " ", " ", " ");
+	printf ("\n%2s%2s%2s", " ", " ", " ");
 	for (j = 0; j <= yLen; j++)
-		printf("___");
+		for (i = 0; i < w; i++)
+			printf("%1s", "_");
 
 	// fourth row
-	printf("\n%3s%3s%3s", "0", " ", "|");
+	printf("\n%2s%2s%2s", "0", " ", "|");
 	for (j = 0; j <= yLen; j++)
-		printf("%3d", table[0][j]);
+		printf("%*d", w, table[0][j]);
 	printf("\n");
 
 	// rest of rows
 	for (i = 1; i <= xLen; i++) {
-		printf("%3d%3c%3s", i, x[i-1], "|");
+		printf("%2d%2c%2s", i, x[i-1], "|");
 		for (j = 0; j <= yLen; j++)
-			printf("%3d", table[i][j]);
+			printf("%*d", w, table[i][j]);
 		printf("\n");
 	}
 }
@@ -300,38 +307,38 @@ void printPairsTable(int xLen, int yLen) {
 	int i,j;
 
 	// first row
-	printf ("%3s%3s%3s", " ", " ", " ");
+	printf ("%2s%2s%2s", " ", " ", " ");
 	for (j = 0; j <= yLen; j++)
-		printf("%3d", j);
+		printf("%2d", j);
 
 	// second row
-	printf ("\n%3s%3s%3s%3s", " ", " ", " ", " ");
+	printf ("\n%2s%2s%2s%2s", " ", " ", " ", " ");
 	for (j = 0; j < yLen; j++)
-		printf("%3c", y[j]);
+		printf("%2c", y[j]);
 
 	// third row
-	printf ("\n%3s%3s%3s", " ", " ", " ");
+	printf ("\n%2s%2s%2s", " ", " ", " ");
 	for (j = 0; j <= yLen; j++)
-		printf("___");
+		printf("__");
 
 	// fourth row
-	printf("\n%3s%3s%3s", "0", " ", "|");
+	printf("\n%2s%2s%2s", "0", " ", "|");
 	for (j = 0; j <= yLen; j++) {
 		if (evaluated(0, j))
-			printf("%3d", pairsTable[0][j].i);
+			printf("%2d", pairsTable[0][j].i);
 		else
-			printf("%3s", "-");
+			printf("%2s", "-");
 	}
 	printf("\n");
 
 	// rest of rows
 	for (i = 1; i <= xLen; i++) {
-		printf("%3d%3c%3s", i, x[i-1], "|");
+		printf("%2d%2c%2s", i, x[i-1], "|");
 		for (j = 0; j <= yLen; j++) {
 			if (evaluated(i, j))
-				printf("%3d", pairsTable[i][j].i);
+				printf("%2d", pairsTable[i][j].i);
 			else
-				printf("%3s", "-");
+				printf("%2s", "-");
 		}
 		printf("\n");
 	}
