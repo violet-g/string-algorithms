@@ -337,6 +337,12 @@ void printPairsTable(int xLen, int yLen) {
 	}
 }
 
+// function to print the optimal alignment for LCS
+// void lcsAlign(xLen, yLen) {
+//
+//
+// }
+
 /*************** LONGEST COMMON SUBSEQUENCE ALGORITHM *********************/
 
 // iterative LCS
@@ -512,7 +518,7 @@ int main(int argc, char *argv[]) {
 	clock_t begin, end;
 	double time_spent = 0.0;
 	int result = 0;
-	float calc = 0.00;
+	float calc = 0.0;
 	bool isIllegal = getArgs(argc, argv); // parse arguments from command line
 	if (isIllegal) // print error and quit if illegal arguments
 		printf("Illegal arguments\n");
@@ -585,9 +591,9 @@ int main(int argc, char *argv[]) {
 				printf("Number of table entries computed: %d\n", count);
 
 				// print proportion details
-				int tsize = xLen*yLen;
-				calc = ((float)count/(float)tsize)*100.00;
-				printf("Proportion of table computed: %.2f\n", (float)count/(float)tsize);
+				int tsize = (xLen+1)*(yLen+1);
+				calc = ((float)count/(float)tsize)*100.0;
+				printf("Proportion of table computed: %.1f%%\n", calc);
 
 				// destroy table
 				destroyPairsTable(xLen, yLen);
