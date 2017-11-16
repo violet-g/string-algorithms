@@ -200,7 +200,7 @@ void freeMemory() {
 
 /********************** HELPER FUNCTIONS *********************************/
 
-// create empty table
+// function to create an empty table
 void createTable(int xLen, int yLen) {
 	int row;
 	table = (int **)malloc((xLen+1)*sizeof(int *)); // first column
@@ -208,7 +208,7 @@ void createTable(int xLen, int yLen) {
   	table[row] = (int *)malloc((yLen+1)*sizeof(int)); // rows
 }
 
-// initialise table with "0" values for first row and column
+// function to initialise table with "0" values for first row and column
 void initTable(int xLen, int yLen) {
 	int i, j;
 	for (i = 0; i <= xLen; i++)
@@ -217,7 +217,16 @@ void initTable(int xLen, int yLen) {
 		table[0][j] = 0;
 }
 
-// create table of pairs for memoisation algorithms
+// function to initialise the whole table with "0"s
+void initZeroTable(int xLen, int yLen) {
+	int i, j;
+	for (i = 0; i <= xLen; i++) {
+		for (j = 0; j <= yLen; j++)
+			table[i][j] = 0;
+	}
+}
+
+// function to create table of pairs used for memoisation algorithms
 void createPairsTable(int xLen, int yLen) {
 	int row;
 	pairsTable = (Pair **)malloc((xLen+1)*sizeof(Pair *)); // first column
@@ -225,12 +234,12 @@ void createPairsTable(int xLen, int yLen) {
   	pairsTable[row] = (Pair *)malloc((yLen+1)*sizeof(Pair)); // rows
 }
 
-// helper array to check if table value was evaluated
+// function to create a helper array to check if table value was evaluated
 void createHelperArray(int xLen, int yLen) {
 	helperArray = malloc((xLen+1)*(yLen+1)*sizeof(Pair));
 }
 
-// check if an entry of the table has been evaluated or not
+// function to check if an entry of the table has been evaluated or not
 bool evaluated(int i, int j) {
  	int q = pairsTable[i][j].j;
  	if (q < 1 || q > count)
@@ -240,7 +249,14 @@ bool evaluated(int i, int j) {
 }
 
 // free memory used by table
+void destroyTable(int xLen, int yLen) {
+	int row;
+	for (row = 0; row <= xLen; row++)
+		free(table[row]);
+	free(table);
+}
 
+// free memory used by the table of pairs
 void destroyPairsTable(int xLen, int yLen) {
 	int row;
 	for (row = 0; row <= xLen; row++) {
@@ -249,18 +265,12 @@ void destroyPairsTable(int xLen, int yLen) {
 	free(pairsTable);
 }
 
-void destroyTable(int xLen, int yLen) {
-	int row;
-	for (row = 0; row <= xLen; row++)
-		free(table[row]);
-	free(table);
-}
-
 // free memory allocated for the helper array
 void destroyHelperArray() {
 	free(helperArray);
 }
 
+// count number of digit an int has
 int numDigits(int n) {
     if (n < 10) return 1;
     return 1 + numDigits(n/10);
@@ -269,6 +279,7 @@ int numDigits(int n) {
 // pretty print dynamic programming table
 void printTable(int xLen, int yLen) {
 	int i,j;
+	// get width of first entry - usually largest entry
 	int w = numDigits(table[0][0]) + 1;
 
 	// first row
@@ -351,8 +362,8 @@ void ilcsAlign(int xLen, int yLen) {
 	lcs[index] = '\0';
 
 	int l = MAX(xLen, yLen) + (MAX(xLen, yLen) - index);
-	char newX[l + 1];
-	char newY[l + 1];
+	char newX[l+1];
+	char newY[l+1];
 	char align[l+1];
 	newX[l] = '\0';
 	newY[l] = '\0';
@@ -367,7 +378,7 @@ void ilcsAlign(int xLen, int yLen) {
 
 	int i = xLen;
 	int j = yLen;
-	while (i > 0 && j > 0 && l > 0) {
+	while (i > 0 && j > 0) {
 		if (x[i-1] == y[j-1]) {
 			lcs[index-1] = x[i-1];
 			newX[l-1] = x[i-1];
@@ -385,6 +396,27 @@ void ilcsAlign(int xLen, int yLen) {
 		}
 		l--;
 	}
+
+	printf("%d %d %d\n", i, j, l);
+
+	if (i > 0 && j==0) {
+		while (i > 0) {
+			newX[l-1] = x[i-1];
+			i--;
+			l--;
+		}
+	}
+
+	if (j > 0 && i==0) {
+		while (j > 0) {
+			newX[l-1] = y[j-1];
+			j--;
+			l--;
+		}
+	}
+
+	printf("%d %d %d\n", i, j, l);
+
 
 	printf("Optimal Alignment:\n");
 	printf("%s\n", lcs);
@@ -480,6 +512,7 @@ int rlcshelper(int i, int j) {
 int rlcs(int m, int n) {
 	total = 0;
 	createTable(m, n);
+	initZeroTable(m, n);
 	rlcshelper(m, n);
 	return total;
 }
@@ -554,6 +587,7 @@ int redhelper(int i, int j) {
 int red(int m, int n) {
 	total = 0;
 	createTable(m, n);
+	initZeroTable(m, n);
 	redhelper(m, n);
 	return total;
 }
