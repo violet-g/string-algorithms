@@ -413,7 +413,7 @@ void ilcsAlign(int xLen, int yLen) {
 		}
 	}
 
-	printf("Optimal Alignment:\n");
+	printf("\nOptimal Alignment:\n");
 	printf("%s\n", newX);
 	printf("%s\n", align);
 	printf("%s\n", newY);
@@ -477,7 +477,7 @@ void mlcsAlign(int xLen, int yLen) {
 		}
 	}
 
-	printf("Optimal Alignment:\n");
+	printf("\nOptimal Alignment:\n");
 	printf("%s\n", newX);
 	printf("%s\n", align);
 	printf("%s\n", newY);
@@ -737,7 +737,7 @@ int main(int argc, char *argv[]) {
 
 
 				// print num of entries computed
-				printf("Number of table entries computed: %d\n", count);
+				printf("\nNumber of table entries computed: %d\n", count);
 
 				// print proportion details
 				int tsize = (xLen+1)*(yLen+1);
