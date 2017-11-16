@@ -728,14 +728,13 @@ int main(int argc, char *argv[]) {
 					// print dynamic programming table
 					printf("Dynamic programming table:\n");
 					printPairsTable(xLen, yLen);
+					if (alg_type==LCS)
+						mlcsAlign(xLen, yLen);
+
 				}
 
 				// print result
 				printf("%s %d\n", result_string, result);
-
-				if (alg_type==LCS)
-					mlcsAlign(xLen, yLen);
-
 
 				// print num of entries computed
 				printf("\nNumber of table entries computed: %d\n", count);
