@@ -397,8 +397,6 @@ void ilcsAlign(int xLen, int yLen) {
 		l--;
 	}
 
-	printf("%d %d %d\n", i, j, l);
-
 	if (i > 0 && j==0) {
 		while (i > 0) {
 			newX[l-1] = x[i-1];
@@ -415,11 +413,7 @@ void ilcsAlign(int xLen, int yLen) {
 		}
 	}
 
-	printf("%d %d %d\n", i, j, l);
-
-
 	printf("Optimal Alignment:\n");
-	printf("%s\n", lcs);
 	printf("%s\n", newX);
 	printf("%s\n", align);
 	printf("%s\n", newY);
@@ -467,8 +461,23 @@ void mlcsAlign(int xLen, int yLen) {
 		l--;
 	}
 
+	if (i > 0 && j==0) {
+		while (i > 0) {
+			newX[l-1] = x[i-1];
+			i--;
+			l--;
+		}
+	}
+
+	if (j > 0 && i==0) {
+		while (j > 0) {
+			newX[l-1] = y[j-1];
+			j--;
+			l--;
+		}
+	}
+
 	printf("Optimal Alignment:\n");
-	printf("%s\n", lcs);
 	printf("%s\n", newX);
 	printf("%s\n", align);
 	printf("%s\n", newY);
