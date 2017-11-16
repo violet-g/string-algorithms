@@ -694,9 +694,11 @@ int main(int argc, char *argv[]) {
 				// print result
 				printf("%s %d\n", result_string, result);
 
-				// print dynamic programming table
-				printf("Dynamic programming table:\n");
-				printTable(xLen, yLen);
+				if (printBool) {
+					// print dynamic programming table
+					printf("Dynamic programming table:\n");
+					printTable(xLen, yLen);
+				}
 
 				if (alg_type==LCS)
 					ilcsAlign(xLen, yLen);
