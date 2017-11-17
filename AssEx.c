@@ -20,16 +20,16 @@ bool printBool = false; // whether to print table
 bool readFileBool = false, genStringsBool = false; // whether to read in strings from file or generate strings randomly
 
 // additions
-int **table;
-int total;
-struct pair;
-struct pair **pairsTable;
-struct pair *helperArray;
-int count;
+int **table; // dynamic prog table
+int total; // computations count for recursive algs
+struct pair; // entry of the dynamic prog table for memoisation algs
+struct pair **pairsTable; // dynamic prog table for memoisation algs
+struct pair *helperArray; // array that stores all computed entries to avoid unnecessary recursive calls
+int count; // num of entries in the helper array
 
-typedef struct pair {
-	int i;
-	int j;
+typedef struct pair { // def of pair
+	int i; // int i for helper array; value for pairs table
+	int j; // int j for helper array; pointer to count for pairs table
 } Pair;
 
 // functions follow
@@ -355,20 +355,21 @@ void printPairsTable(int xLen, int yLen) {
 	}
 }
 
-// function to print the optimal alignment for LCS
+// function to print the optimal alignment for iterative LCS
 void ilcsAlign(int xLen, int yLen) {
-	int index = table[xLen][yLen];
-	char lcs[index+1];
+	int index = table[xLen][yLen]; // length of lcs
+	char lcs[index+1]; // the lcs itself
 	lcs[index] = '\0';
 
 	int l = MAX(xLen, yLen) + (MAX(xLen, yLen) - index);
-	char newX[l+1];
-	char newY[l+1];
-	char align[l+1];
+	char newX[l+1]; // string x to print
+	char newY[l+1]; // string y to print
+	char align[l+1]; // show alignment
 	newX[l] = '\0';
 	newY[l] = '\0';
 	align[l] = '\0';
 
+	// initialisation
 	int c;
 	for (c = 0; c < l; c ++) {
 		newX[c] = '-';
@@ -379,7 +380,7 @@ void ilcsAlign(int xLen, int yLen) {
 	int i = xLen;
 	int j = yLen;
 	while (i > 0 && j > 0) {
-		if (x[i-1] == y[j-1]) {
+		if (x[i-1] == y[j-1]) { // chars match
 			lcs[index-1] = x[i-1];
 			newX[l-1] = x[i-1];
 			newY[l-1] = y[j-1];
@@ -387,16 +388,17 @@ void ilcsAlign(int xLen, int yLen) {
 			i--;
 			j--;
 			index--;
-		} else if (table[i-1][j] > table[i][j-1]) {
+		} else if (table[i-1][j] > table[i][j-1]) { // deletion
 			newX[l-1] = x[i-1];
 			i--;
-		}	else {
+		}	else { // insertion
 			newY[l-1] = y[j-1];
 			j--;
 		}
 		l--;
 	}
 
+	// fill up front non-matching chars
 	if (i > 0 && j==0) {
 		while (i > 0) {
 			newX[l-1] = x[i-1];
@@ -419,7 +421,7 @@ void ilcsAlign(int xLen, int yLen) {
 	printf("%s\n", newY);
 }
 
-// function to print the optimal alignment for LCS
+// function to print the optimal alignment for rec LCS with memoisation
 void mlcsAlign(int xLen, int yLen) {
 	int index = pairsTable[xLen][yLen].i;
 	char lcs[index+1];
